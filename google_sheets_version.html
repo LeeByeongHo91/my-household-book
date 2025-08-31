@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>구글 스프레드시트 가계부</title>
+    <title>우리집 가계부 - 완성 버전</title>
     <style>
         * {
             margin: 0;
@@ -19,7 +19,7 @@
         }
         
         .container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
@@ -31,6 +31,38 @@
             text-align: center;
             color: #333;
             margin-bottom: 30px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 16px;
+            color: #666;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
         }
         
         .form-group {
@@ -55,6 +87,75 @@
         input:focus, select:focus {
             outline: none;
             border-color: #667eea;
+        }
+        
+        /* 사용자 선택 버튼 스타일 */
+        .person-selector {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .person-option {
+            flex: 1;
+            padding: 15px;
+            border: 3px solid #e0e0e0;
+            border-radius: 15px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            position: relative;
+        }
+        
+        .person-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .person-option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f3f4ff 0%, #ede7f6 100%);
+        }
+        
+        .person-option.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .person-icon {
+            font-size: 40px;
+            margin-bottom: 5px;
+        }
+        
+        .person-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .person-option.husband .person-icon {
+            color: #1976d2;
+        }
+        
+        .person-option.wife .person-icon {
+            color: #c2185b;
+        }
+        
+        .person-option.joint .person-icon {
+            color: #7b1fa2;
         }
         
         button {
@@ -135,6 +236,49 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: relative;
+        }
+        
+        .transaction:hover {
+            background: #e9ecef;
+        }
+        
+        .transaction-info {
+            flex: 1;
+        }
+        
+        .transaction-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .edit-btn {
+            background: #ffc107;
+            color: #000;
+        }
+        
+        .edit-btn:hover {
+            background: #ffb300;
+        }
+        
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .delete-btn:hover {
+            background: #c82333;
         }
         
         .loading {
@@ -142,87 +286,512 @@
             padding: 20px;
             color: #666;
         }
+        
+        .person-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .person-husband {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .person-wife {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+        
+        .person-joint {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        /* 모달 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+        
+        .close-btn:hover {
+            color: #333;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .modal-actions button {
+            flex: 1;
+        }
+        
+        .cancel-btn {
+            background: #6c757d;
+        }
+        
+        .cancel-btn:hover {
+            background: #5a6268;
+        }
+        
+        .chart-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+        
+        .chart-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .mini-chart {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .filter-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 8px 15px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            color: #333;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .filter-btn:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+        
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                border-radius: 0;
+            }
+            
+            body {
+                padding: 0;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .person-selector {
+                flex-direction: column;
+            }
+            
+            .person-option {
+                width: 100%;
+            }
+            
+            .transaction-actions {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>💰 구글 스프레드시트 가계부</h1>
+        <h1>💰 우리집 가계부</h1>
         
-        <div class="stats" id="stats">
-            <div class="stat-card">
-                <div class="stat-label">이번 달 수입</div>
-                <div class="stat-value income" id="totalIncome">₩0</div>
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('input')">입력</button>
+            <button class="tab" onclick="showTab('chart')">차트</button>
+            <button class="tab" onclick="showTab('list')">내역</button>
+        </div>
+        
+        <!-- 입력 탭 -->
+        <div id="input-tab" class="tab-content active">
+            <div class="stats" id="stats">
+                <div class="stat-card">
+                    <div class="stat-label">이번 달 수입</div>
+                    <div class="stat-value income" id="totalIncome">₩0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">이번 달 지출</div>
+                    <div class="stat-value expense" id="totalExpense">₩0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">잔액</div>
+                    <div class="stat-value balance" id="balance">₩0</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">이번 달 지출</div>
-                <div class="stat-value expense" id="totalExpense">₩0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">잔액</div>
-                <div class="stat-value balance" id="balance">₩0</div>
+            
+            <form id="transactionForm">
+                <div class="form-group">
+                    <label for="date">날짜</label>
+                    <input type="date" id="date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="type">구분</label>
+                    <select id="type" required>
+                        <option value="">선택하세요</option>
+                        <option value="수입">수입</option>
+                        <option value="지출">지출</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="personGroup" style="display: none;">
+                    <label>사용자 선택</label>
+                    <div class="person-selector">
+                        <div class="person-option husband" onclick="selectPerson('남편')">
+                            <div class="person-icon">👨</div>
+                            <div class="person-label">남편</div>
+                        </div>
+                        <div class="person-option wife" onclick="selectPerson('아내')">
+                            <div class="person-icon">👩</div>
+                            <div class="person-label">아내</div>
+                        </div>
+                        <div class="person-option joint" onclick="selectPerson('공동')">
+                            <div class="person-icon">👫</div>
+                            <div class="person-label">공동</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="person" value="">
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">카테고리</label>
+                    <select id="category" required>
+                        <option value="">먼저 구분을 선택하세요</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="amount">금액</label>
+                    <input type="number" id="amount" placeholder="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">설명</label>
+                    <input type="text" id="description" placeholder="선택사항">
+                </div>
+                
+                <button type="submit">저장하기</button>
+            </form>
+            
+            <div id="status"></div>
+        </div>
+        
+        <!-- 차트 탭 -->
+        <div id="chart-tab" class="tab-content">
+            <div class="chart-container">
+                <div class="chart-title">📊 이번 달 분석</div>
+                
+                <div class="chart-grid">
+                    <div class="mini-chart">
+                        <h4>카테고리별 지출</h4>
+                        <canvas id="categoryChart" width="300" height="200"></canvas>
+                    </div>
+                    
+                    <div class="mini-chart">
+                        <h4>사용자별 지출</h4>
+                        <canvas id="personChart" width="300" height="200"></canvas>
+                    </div>
+                </div>
+                
+                <div class="mini-chart" style="margin-top: 20px;">
+                    <h4>일별 지출 추이</h4>
+                    <canvas id="dailyChart" width="600" height="200"></canvas>
+                </div>
+                
+                <div class="mini-chart" style="margin-top: 20px;">
+                    <h4>카테고리별 상세 (최근 30일)</h4>
+                    <div id="categoryDetails"></div>
+                </div>
             </div>
         </div>
         
-        <form id="transactionForm">
-            <div class="form-group">
-                <label for="date">날짜</label>
-                <input type="date" id="date" required>
+        <!-- 내역 탭 -->
+        <div id="list-tab" class="tab-content">
+            <div class="filter-section">
+                <button class="filter-btn active" onclick="filterTransactions('all')">전체</button>
+                <button class="filter-btn" onclick="filterTransactions('남편')">남편</button>
+                <button class="filter-btn" onclick="filterTransactions('아내')">아내</button>
+                <button class="filter-btn" onclick="filterTransactions('공동')">공동</button>
             </div>
             
-            <div class="form-group">
-                <label for="type">구분</label>
-                <select id="type" required>
-                    <option value="">선택하세요</option>
-                    <option value="수입">수입</option>
-                    <option value="지출">지출</option>
-                </select>
+            <div class="transactions" id="recentTransactions">
+                <h3>최근 거래 내역</h3>
+                <div class="loading">데이터 불러오는 중...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 수정 모달 -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">거래 수정</div>
+                <button class="close-btn" onclick="closeEditModal()">×</button>
             </div>
             
-            <div class="form-group">
-                <label for="category">카테고리</label>
-                <select id="category" required>
-                    <option value="">먼저 구분을 선택하세요</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="amount">금액</label>
-                <input type="number" id="amount" placeholder="0" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="description">설명</label>
-                <input type="text" id="description" placeholder="선택사항">
-            </div>
-            
-            <button type="submit">저장하기</button>
-        </form>
-        
-        <div id="status"></div>
-        
-        <div class="transactions" id="recentTransactions">
-            <h3>최근 거래 내역</h3>
-            <div class="loading">데이터 불러오는 중...</div>
+            <form id="editForm">
+                <input type="hidden" id="editRow">
+                
+                <div class="form-group">
+                    <label for="editDate">날짜</label>
+                    <input type="date" id="editDate" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editType">구분</label>
+                    <select id="editType" required>
+                        <option value="수입">수입</option>
+                        <option value="지출">지출</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="editPersonGroup">
+                    <label>사용자</label>
+                    <div class="person-selector">
+                        <div class="person-option husband" onclick="selectEditPerson('남편')">
+                            <div class="person-icon">👨</div>
+                            <div class="person-label">남편</div>
+                        </div>
+                        <div class="person-option wife" onclick="selectEditPerson('아내')">
+                            <div class="person-icon">👩</div>
+                            <div class="person-label">아내</div>
+                        </div>
+                        <div class="person-option joint" onclick="selectEditPerson('공동')">
+                            <div class="person-icon">👫</div>
+                            <div class="person-label">공동</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="editPerson" value="">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editCategory">카테고리</label>
+                    <select id="editCategory" required>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editAmount">금액</label>
+                    <input type="number" id="editAmount" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editDescription">설명</label>
+                    <input type="text" id="editDescription">
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" onclick="closeEditModal()">취소</button>
+                    <button type="submit">수정 완료</button>
+                </div>
+            </form>
         </div>
     </div>
     
     <script>
-        // 구글 스프레드시트 Web App URL (배포 후 여기에 입력)
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwu1Rh6zXnjxEzw2_RuaBGJk3R-JECTQZU57M1n1LSEqmLs8S8cTwc0yl4-GosXB6dkjg/exec';
+        // 구글 스프레드시트 Web App URL
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxnNeKz8W21PTFggQBm41_yYpSocXisFuiNYSq14lGHNJi8fj6DZ_Pyjg6aALdMKduxVQ/exec';
         
         // 카테고리 데이터
         const categories = {
-            '수입': ['급여', '부수입', '용돈', '기타수입'],
-            '지출': ['식비', '교통비', '쇼핑', '공과금', '의료비', '교육', '여가', '기타지출']
+            '수입': ['급여', '부수입', '용돈', '투자수익', '기타수입'],
+            '지출': ['식비', '교통비', '쇼핑', '공과금', '의료비', '교육', '여가', '카페', '술/회식', '생활용품', '기타지출']
         };
+        
+        // 전역 변수로 거래 데이터 저장
+        let allTransactions = [];
+        let currentFilter = 'all';
+        let selectedPerson = '';
+        let editingPerson = '';
+        
+        // 색상 팔레트
+        const colors = [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+            '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384'
+        ];
         
         // 오늘 날짜 설정
         document.getElementById('date').valueAsDate = new Date();
         
-        // 구분 선택시 카테고리 업데이트
+        // 탭 전환 함수
+        function showTab(tabName) {
+            // 모든 탭과 컨텐츠 숨기기
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // 선택한 탭 활성화
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // 차트 탭이면 차트 그리기
+            if (tabName === 'chart') {
+                drawCharts();
+            }
+        }
+        
+        // 사용자 선택 함수
+        function selectPerson(person) {
+            // 모든 선택 해제
+            document.querySelectorAll('#personGroup .person-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // 선택한 사용자 활성화
+            selectedPerson = person;
+            document.getElementById('person').value = person;
+            
+            // 선택한 버튼에 selected 클래스 추가
+            const selectedOption = event.currentTarget;
+            selectedOption.classList.add('selected');
+        }
+        
+        // 수정 모달에서 사용자 선택
+        function selectEditPerson(person) {
+            // 모든 선택 해제
+            document.querySelectorAll('#editPersonGroup .person-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // 선택한 사용자 활성화
+            editingPerson = person;
+            document.getElementById('editPerson').value = person;
+            
+            // 선택한 버튼에 selected 클래스 추가
+            const selectedOption = event.currentTarget;
+            selectedOption.classList.add('selected');
+        }
+        
+        // 구분 선택시 카테고리 업데이트 및 사용자 필드 표시
         document.getElementById('type').addEventListener('change', function() {
             const categorySelect = document.getElementById('category');
+            const personGroup = document.getElementById('personGroup');
+            
             categorySelect.innerHTML = '<option value="">카테고리 선택</option>';
+            
+            // 수입이든 지출이든 사용자 선택 표시
+            if (this.value) {
+                personGroup.style.display = 'block';
+                document.getElementById('person').required = true;
+            } else {
+                personGroup.style.display = 'none';
+                document.getElementById('person').required = false;
+                document.getElementById('person').value = '';
+                selectedPerson = '';
+                // 모든 사용자 선택 해제
+                document.querySelectorAll('.person-option').forEach(option => {
+                    option.classList.remove('selected');
+                });
+            }
+            
+            if (this.value && categories[this.value]) {
+                categories[this.value].forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    categorySelect.appendChild(option);
+                });
+            }
+        });
+        
+        // 수정 모달에서 구분 변경시
+        document.getElementById('editType').addEventListener('change', function() {
+            const categorySelect = document.getElementById('editCategory');
+            categorySelect.innerHTML = '';
             
             if (this.value && categories[this.value]) {
                 categories[this.value].forEach(cat => {
@@ -238,9 +807,16 @@
         document.getElementById('transactionForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            // 사용자 선택 확인
+            if (!selectedPerson) {
+                showStatus('사용자를 선택해주세요!', 'error');
+                return;
+            }
+            
             const formData = {
                 date: document.getElementById('date').value,
                 type: document.getElementById('type').value,
+                person: document.getElementById('person').value || '',
                 category: document.getElementById('category').value,
                 amount: document.getElementById('amount').value,
                 description: document.getElementById('description').value,
@@ -264,6 +840,11 @@
                     showStatus('저장되었습니다!', 'success');
                     this.reset();
                     document.getElementById('date').valueAsDate = new Date();
+                    document.getElementById('personGroup').style.display = 'none';
+                    selectedPerson = '';
+                    document.querySelectorAll('.person-option').forEach(option => {
+                        option.classList.remove('selected');
+                    });
                     loadStats();
                     loadTransactions();
                 } else {
@@ -273,6 +854,115 @@
                 showStatus('오류가 발생했습니다: ' + error.message, 'error');
             }
         });
+        
+        // 수정 폼 제출
+        document.getElementById('editForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!editingPerson) {
+                alert('사용자를 선택해주세요!');
+                return;
+            }
+            
+            const formData = {
+                row: document.getElementById('editRow').value,
+                date: document.getElementById('editDate').value,
+                type: document.getElementById('editType').value,
+                person: document.getElementById('editPerson').value,
+                category: document.getElementById('editCategory').value,
+                amount: document.getElementById('editAmount').value,
+                description: document.getElementById('editDescription').value,
+                action: 'update'
+            };
+            
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(formData),
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showStatus('수정되었습니다!', 'success');
+                    closeEditModal();
+                    loadStats();
+                    loadTransactions();
+                } else {
+                    alert('수정 실패: ' + result.message);
+                }
+            } catch (error) {
+                alert('오류가 발생했습니다: ' + error.message);
+            }
+        });
+        
+        // 거래 수정 모달 열기
+        function editTransaction(row, transaction) {
+            document.getElementById('editModal').classList.add('active');
+            document.getElementById('editRow').value = row;
+            document.getElementById('editDate').value = transaction.date;
+            document.getElementById('editType').value = transaction.type;
+            document.getElementById('editAmount').value = transaction.amount;
+            document.getElementById('editDescription').value = transaction.description || '';
+            
+            // 카테고리 설정
+            const editType = document.getElementById('editType');
+            editType.dispatchEvent(new Event('change'));
+            setTimeout(() => {
+                document.getElementById('editCategory').value = transaction.category;
+            }, 100);
+            
+            // 사용자 선택
+            editingPerson = transaction.person || '';
+            document.getElementById('editPerson').value = editingPerson;
+            document.querySelectorAll('#editPersonGroup .person-option').forEach(option => {
+                option.classList.remove('selected');
+                if (option.textContent.includes(editingPerson)) {
+                    option.classList.add('selected');
+                }
+            });
+        }
+        
+        // 수정 모달 닫기
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+            editingPerson = '';
+        }
+        
+        // 거래 삭제
+        async function deleteTransaction(row) {
+            if (!confirm('정말 삭제하시겠습니까?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        row: row,
+                        action: 'delete'
+                    }),
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showStatus('삭제되었습니다!', 'success');
+                    loadStats();
+                    loadTransactions();
+                } else {
+                    alert('삭제 실패: ' + result.message);
+                }
+            } catch (error) {
+                alert('오류가 발생했습니다: ' + error.message);
+            }
+        }
         
         // 상태 메시지 표시
         function showStatus(message, type) {
@@ -310,37 +1000,274 @@
         // 거래 내역 로드
         async function loadTransactions() {
             try {
-                const response = await fetch(SCRIPT_URL + '?action=recent');
+                const response = await fetch(SCRIPT_URL + '?action=recent&limit=100');
                 const data = await response.json();
                 
-                const container = document.getElementById('recentTransactions');
-                
-                if (data.status === 'success' && data.transactions.length > 0) {
-                    let html = '<h3>최근 거래 내역</h3>';
-                    
-                    data.transactions.forEach(t => {
-                        const amountClass = t.type === '수입' ? 'income' : 'expense';
-                        const sign = t.type === '수입' ? '+' : '-';
-                        html += `
-                            <div class="transaction">
-                                <div>
-                                    <strong>${t.date}</strong> | ${t.category}<br>
-                                    <small>${t.description || '-'}</small>
-                                </div>
-                                <div class="${amountClass}" style="font-weight: bold;">
-                                    ${sign}₩${Number(t.amount).toLocaleString()}
-                                </div>
-                            </div>
-                        `;
-                    });
-                    
-                    container.innerHTML = html;
-                } else {
-                    container.innerHTML = '<h3>최근 거래 내역</h3><p style="text-align: center; color: #666;">거래 내역이 없습니다.</p>';
+                if (data.status === 'success') {
+                    allTransactions = data.transactions || [];
+                    displayTransactions(allTransactions);
                 }
             } catch (error) {
                 console.error('거래 내역 로드 실패:', error);
             }
+        }
+        
+        // 거래 내역 표시
+        function displayTransactions(transactions) {
+            const container = document.getElementById('recentTransactions');
+            
+            // 필터링
+            let filtered = transactions;
+            if (currentFilter !== 'all') {
+                filtered = transactions.filter(t => t.person === currentFilter);
+            }
+            
+            if (filtered.length > 0) {
+                let html = '<h3>최근 거래 내역</h3>';
+                
+                filtered.forEach(t => {
+                    const amountClass = t.type === '수입' ? 'income' : 'expense';
+                    const sign = t.type === '수입' ? '+' : '-';
+                    
+                    let personBadge = '';
+                    if (t.person) {
+                        const badgeClass = t.person === '남편' ? 'person-husband' : 
+                                         t.person === '아내' ? 'person-wife' : 'person-joint';
+                        const icon = t.person === '남편' ? '👨' : 
+                                   t.person === '아내' ? '👩' : '👫';
+                        personBadge = `<span class="person-badge ${badgeClass}">${icon} ${t.person}</span>`;
+                    }
+                    
+                    html += `
+                        <div class="transaction">
+                            <div class="transaction-info">
+                                <strong>${t.date}</strong> | ${t.category}${personBadge}<br>
+                                <small>${t.description || '-'}</small>
+                            </div>
+                            <div class="transaction-actions">
+                                <div class="${amountClass}" style="font-weight: bold; margin-right: 10px;">
+                                    ${sign}₩${Number(t.amount).toLocaleString()}
+                                </div>
+                                <button class="action-btn edit-btn" onclick='editTransaction(${t.row}, ${JSON.stringify(t)})'>수정</button>
+                                <button class="action-btn delete-btn" onclick="deleteTransaction(${t.row})">삭제</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = '<h3>최근 거래 내역</h3><p style="text-align: center; color: #666;">거래 내역이 없습니다.</p>';
+            }
+        }
+        
+        // 거래 필터링
+        function filterTransactions(filter) {
+            currentFilter = filter;
+            
+            // 필터 버튼 스타일 업데이트
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            displayTransactions(allTransactions);
+        }
+        
+        // 차트 그리기
+        function drawCharts() {
+            // 데이터 준비
+            const expenses = allTransactions.filter(t => t.type === '지출');
+            
+            // 카테고리별 집계
+            const categoryData = {};
+            const personData = {};
+            const dailyData = {};
+            
+            expenses.forEach(t => {
+                // 카테고리별
+                categoryData[t.category] = (categoryData[t.category] || 0) + Number(t.amount);
+                
+                // 사용자별
+                if (t.person) {
+                    personData[t.person] = (personData[t.person] || 0) + Number(t.amount);
+                }
+                
+                // 일별
+                dailyData[t.date] = (dailyData[t.date] || 0) + Number(t.amount);
+            });
+            
+            // 카테고리 차트
+            drawPieChart('categoryChart', categoryData);
+            
+            // 사용자별 차트
+            drawPieChart('personChart', personData);
+            
+            // 일별 차트
+            drawLineChart('dailyChart', dailyData);
+            
+            // 카테고리 상세
+            drawCategoryDetails(categoryData);
+        }
+        
+        // 파이 차트 그리기
+        function drawPieChart(canvasId, data) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(width, height) / 3;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            const total = Object.values(data).reduce((a, b) => a + b, 0);
+            if (total === 0) {
+                ctx.fillStyle = '#666';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('데이터 없음', centerX, centerY);
+                return;
+            }
+            
+            let currentAngle = -Math.PI / 2;
+            let colorIndex = 0;
+            
+            Object.entries(data).forEach(([label, value]) => {
+                const sliceAngle = (value / total) * 2 * Math.PI;
+                
+                // Draw slice
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+                ctx.lineTo(centerX, centerY);
+                ctx.fillStyle = colors[colorIndex % colors.length];
+                ctx.fill();
+                
+                // Draw label
+                const labelAngle = currentAngle + sliceAngle / 2;
+                const labelX = centerX + Math.cos(labelAngle) * (radius * 0.7);
+                const labelY = centerY + Math.sin(labelAngle) * (radius * 0.7);
+                
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                const percentage = ((value / total) * 100).toFixed(1);
+                if (percentage > 5) { // Only show label if slice is big enough
+                    ctx.fillText(`${label}`, labelX, labelY - 8);
+                    ctx.fillText(`${percentage}%`, labelX, labelY + 8);
+                }
+                
+                currentAngle += sliceAngle;
+                colorIndex++;
+            });
+        }
+        
+        // 라인 차트 그리기
+        function drawLineChart(canvasId, data) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 40;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            const dates = Object.keys(data).sort();
+            if (dates.length === 0) {
+                ctx.fillStyle = '#666';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('데이터 없음', width / 2, height / 2);
+                return;
+            }
+            
+            const values = dates.map(d => data[d]);
+            const maxValue = Math.max(...values);
+            const minValue = 0;
+            
+            // Draw axes
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+            
+            // Draw data
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            dates.forEach((date, index) => {
+                const x = padding + (index / (dates.length - 1)) * (width - 2 * padding);
+                const y = height - padding - ((data[date] - minValue) / (maxValue - minValue)) * (height - 2 * padding);
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+                
+                // Draw point
+                ctx.fillStyle = '#667eea';
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Draw value
+                ctx.fillStyle = '#333';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(data[date].toLocaleString(), x, y - 10);
+                
+                // Draw date
+                if (index % Math.ceil(dates.length / 5) === 0) { // Show every nth date
+                    ctx.save();
+                    ctx.translate(x, height - padding + 15);
+                    ctx.rotate(-Math.PI / 4);
+                    ctx.fillText(date.substring(5), 0, 0);
+                    ctx.restore();
+                }
+            });
+            
+            ctx.stroke();
+        }
+        
+        // 카테고리 상세 표시
+        function drawCategoryDetails(data) {
+            const container = document.getElementById('categoryDetails');
+            const sortedCategories = Object.entries(data).sort((a, b) => b[1] - a[1]);
+            
+            let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+            
+            sortedCategories.forEach(([category, amount], index) => {
+                const maxAmount = sortedCategories[0][1];
+                const percentage = (amount / maxAmount) * 100;
+                
+                html += `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 100px; font-size: 12px;">${category}</div>
+                        <div style="flex: 1; background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden;">
+                            <div style="width: ${percentage}%; height: 100%; background: ${colors[index % colors.length]}"></div>
+                        </div>
+                        <div style="width: 80px; text-align: right; font-size: 12px; font-weight: bold;">
+                            ₩${amount.toLocaleString()}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
         }
         
         // 페이지 로드시 데이터 불러오기
@@ -352,6 +1279,13 @@
             loadStats();
             loadTransactions();
         };
+        
+        // 모달 외부 클릭시 닫기
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                closeEditModal();
+            }
+        }
     </script>
 </body>
 </html>
