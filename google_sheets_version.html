@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>구글 스프레드시트 가계부</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .income { color: #28a745; }
+        .expense { color: #dc3545; }
+        .balance { color: #007bff; }
+        
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .transactions {
+            margin-top: 30px;
+        }
+        
+        .transaction {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 구글 스프레드시트 가계부</h1>
+        
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <div class="stat-label">이번 달 수입</div>
+                <div class="stat-value income" id="totalIncome">₩0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">이번 달 지출</div>
+                <div class="stat-value expense" id="totalExpense">₩0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">잔액</div>
+                <div class="stat-value balance" id="balance">₩0</div>
+            </div>
+        </div>
+        
+        <form id="transactionForm">
+            <div class="form-group">
+                <label for="date">날짜</label>
+                <input type="date" id="date" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="type">구분</label>
+                <select id="type" required>
+                    <option value="">선택하세요</option>
+                    <option value="수입">수입</option>
+                    <option value="지출">지출</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="category">카테고리</label>
+                <select id="category" required>
+                    <option value="">먼저 구분을 선택하세요</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="amount">금액</label>
+                <input type="number" id="amount" placeholder="0" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">설명</label>
+                <input type="text" id="description" placeholder="선택사항">
+            </div>
+            
+            <button type="submit">저장하기</button>
+        </form>
+        
+        <div id="status"></div>
+        
+        <div class="transactions" id="recentTransactions">
+            <h3>최근 거래 내역</h3>
+            <div class="loading">데이터 불러오는 중...</div>
+        </div>
+    </div>
+    
+    <script>
+        // 구글 스프레드시트 Web App URL (배포 후 여기에 입력)
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwu1Rh6zXnjxEzw2_RuaBGJk3R-JECTQZU57M1n1LSEqmLs8S8cTwc0yl4-GosXB6dkjg/exec';
+        
+        // 카테고리 데이터
+        const categories = {
+            '수입': ['급여', '부수입', '용돈', '기타수입'],
+            '지출': ['식비', '교통비', '쇼핑', '공과금', '의료비', '교육', '여가', '기타지출']
+        };
+        
+        // 오늘 날짜 설정
+        document.getElementById('date').valueAsDate = new Date();
+        
+        // 구분 선택시 카테고리 업데이트
+        document.getElementById('type').addEventListener('change', function() {
+            const categorySelect = document.getElementById('category');
+            categorySelect.innerHTML = '<option value="">카테고리 선택</option>';
+            
+            if (this.value && categories[this.value]) {
+                categories[this.value].forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    categorySelect.appendChild(option);
+                });
+            }
+        });
+        
+        // 폼 제출
+        document.getElementById('transactionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                date: document.getElementById('date').value,
+                type: document.getElementById('type').value,
+                category: document.getElementById('category').value,
+                amount: document.getElementById('amount').value,
+                description: document.getElementById('description').value,
+                action: 'add'
+            };
+            
+            try {
+                showStatus('저장 중...', 'success');
+                
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(formData),
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showStatus('저장되었습니다!', 'success');
+                    this.reset();
+                    document.getElementById('date').valueAsDate = new Date();
+                    loadStats();
+                    loadTransactions();
+                } else {
+                    showStatus('저장 실패: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showStatus('오류가 발생했습니다: ' + error.message, 'error');
+            }
+        });
+        
+        // 상태 메시지 표시
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = type;
+            status.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // 통계 로드
+        async function loadStats() {
+            try {
+                const response = await fetch(SCRIPT_URL + '?action=stats');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('totalIncome').textContent = 
+                        '₩' + Number(data.income).toLocaleString();
+                    document.getElementById('totalExpense').textContent = 
+                        '₩' + Number(data.expense).toLocaleString();
+                    document.getElementById('balance').textContent = 
+                        '₩' + Number(data.balance).toLocaleString();
+                }
+            } catch (error) {
+                console.error('통계 로드 실패:', error);
+            }
+        }
+        
+        // 거래 내역 로드
+        async function loadTransactions() {
+            try {
+                const response = await fetch(SCRIPT_URL + '?action=recent');
+                const data = await response.json();
+                
+                const container = document.getElementById('recentTransactions');
+                
+                if (data.status === 'success' && data.transactions.length > 0) {
+                    let html = '<h3>최근 거래 내역</h3>';
+                    
+                    data.transactions.forEach(t => {
+                        const amountClass = t.type === '수입' ? 'income' : 'expense';
+                        const sign = t.type === '수입' ? '+' : '-';
+                        html += `
+                            <div class="transaction">
+                                <div>
+                                    <strong>${t.date}</strong> | ${t.category}<br>
+                                    <small>${t.description || '-'}</small>
+                                </div>
+                                <div class="${amountClass}" style="font-weight: bold;">
+                                    ${sign}₩${Number(t.amount).toLocaleString()}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<h3>최근 거래 내역</h3><p style="text-align: center; color: #666;">거래 내역이 없습니다.</p>';
+                }
+            } catch (error) {
+                console.error('거래 내역 로드 실패:', error);
+            }
+        }
+        
+        // 페이지 로드시 데이터 불러오기
+        window.onload = function() {
+            if (SCRIPT_URL === 'YOUR_GOOGLE_SCRIPT_URL_HERE') {
+                showStatus('먼저 Google Apps Script를 설정하고 URL을 입력해주세요!', 'error');
+                return;
+            }
+            loadStats();
+            loadTransactions();
+        };
+    </script>
+</body>
+</html>
